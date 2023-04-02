@@ -1,10 +1,10 @@
 /*
- * xsct - X11 set color temperature
+ * ssct - suckless set color temperature (X11)
  *
  * Public domain, do as you wish.
  */
 
-#include "xsct.h"
+#include "ssct.h"
 
 static void usage(char * pname)
 {
