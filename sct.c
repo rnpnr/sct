@@ -199,7 +199,8 @@ int
 main(int argc, char **argv)
 {
 	int screen, screens;
-	int screen_specified, screen_first, screen_last, crtc_specified;
+	int screen_specified = -1, screen_first = 0, screen_last = -1;
+	int crtc_specified = -1;
 	struct temp_status temp = { .temp = DELTA_MIN, .brightness = -1.0 };
 	int dflag = 0;
 
@@ -238,10 +239,7 @@ main(int argc, char **argv)
 		die("XOpenDisplay: can't open display\n");
 
 	screens = XScreenCount(dpy);
-	screen_first = 0;
 	screen_last = screens - 1;
-	screen_specified = -1;
-	crtc_specified = -1;
 
 	if (screen_specified >= screens) {
 		XCloseDisplay(dpy);
