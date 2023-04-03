@@ -1,14 +1,14 @@
-.TH SSCT 1 ssct\-VERSION
+.TH SCT 1 sct\-VERSION
 .SH NAME
-ssct \- set screen color temperature (X11)
+sct \- set screen color temperature (X11)
 .SH SYNOPSIS
-.B ssct
+.B sct
 .RB [options]
 .RB [temperature]
 .RB [brightness]
 
 .SH DESCRIPTION
-.B ssct
+.B sct
 sets the screen's color temperature.
 
 .SH OPTIONS
@@ -28,15 +28,15 @@ Zero-based index of CRTC to use.
 .BI [temperature]
 Black body temperature
 .br
-If the value is 0, xsct sets the color temperature to the default of 6500
+If the value is 0, sct sets the color temperature to the default of 6500
 .br
-If no arguments are passed, xsct estimates the current display temperature and brightness
+If no arguments are passed, sct estimates the current display temperature and brightness
 .TP
 .BI [brightness]
 Linear brightness between 0.0 (inclusive) and 1.0 (inclusive). The default value is 1.0 if no parameter is passed.
 
 .SH AUTHOR
-ssct is based on sct by Ted Unangst <tedu@openbsd.org>
+sct is based on code by Ted Unangst <tedu@openbsd.org>
 
 .SH SEE ALSO
 redshift(1), xtemp(1)
