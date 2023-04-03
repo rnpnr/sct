@@ -67,8 +67,8 @@ DoubleTrim(double x, double a, double b)
 	return buff[(int)(x > a) + (int)(x > b)];
 }
 
-static struct temp_status
-get_sct_for_screen(int screen, int icrtc)
+static void
+get_sct_for_screen(struct temp_status *ts, int screen, int icrtc)
 {
 	Window root = RootWindow(dpy, screen);
 	XRRScreenResources *res = XRRGetScreenResourcesCurrent(dpy, root);
@@ -76,9 +76,6 @@ get_sct_for_screen(int screen, int icrtc)
 	int n, c;
 	double t = 0.0;
 	double gammar = 0.0, gammag = 0.0, gammab = 0.0, gammad = 0.0;
-	struct temp_status temp;
-	temp.temp = 0;
-	temp.brightness = 1.0;
 
 	n = res->ncrtc;
 	if ((icrtc >= 0) && (icrtc < n))
@@ -99,19 +96,19 @@ get_sct_for_screen(int screen, int icrtc)
 		XRRFreeGamma(crtc_gamma);
 	}
 	XFree(res);
-	temp.brightness = (gammar > gammag) ? gammar : gammag;
-	temp.brightness = (gammab > temp.brightness) ? gammab : temp.brightness;
-	if (temp.brightness > 0.0 && n > 0) {
-		gammar /= temp.brightness;
-		gammag /= temp.brightness;
-		gammab /= temp.brightness;
-		temp.brightness /= n;
-		temp.brightness /= BRIGHTHESS_DIV;
-		temp.brightness = DoubleTrim(temp.brightness, 0.0, 1.0);
+	ts->brightness = (gammar > gammag) ? gammar : gammag;
+	ts->brightness = (gammab > ts->brightness) ? gammab : ts->brightness;
+	if (ts->brightness > 0.0 && n > 0) {
+		gammar /= ts->brightness;
+		gammag /= ts->brightness;
+		gammab /= ts->brightness;
+		ts->brightness /= n;
+		ts->brightness /= BRIGHTHESS_DIV;
+		ts->brightness = DoubleTrim(ts->brightness, 0.0, 1.0);
 		if (vflag)
 			fprintf(stderr,
 			        "DEBUG: Gamma: %f, %f, %f, brightness: %f\n",
-			        gammar, gammag, gammab, temp.brightness);
+			        gammar, gammag, gammab, ts->brightness);
 		gammad = gammab - gammar;
 		if (gammad < 0.0) {
 			if (gammab > 0.0) {
@@ -132,33 +129,31 @@ get_sct_for_screen(int screen, int icrtc)
 			    + (TEMPERATURE_NORM - TEMPERATURE_ZERO);
 		}
 	} else
-		temp.brightness = DoubleTrim(temp.brightness, 0.0, 1.0);
+		ts->brightness = DoubleTrim(ts->brightness, 0.0, 1.0);
 
-	temp.temp = (int)(t + 0.5);
-
-	return temp;
+	ts->temp = (int)(t + 0.5);
 }
 
 static void
-sct_for_screen(int screen, int icrtc, struct temp_status temp)
+sct_for_screen(int screen, int icrtc, struct temp_status *ts)
 {
 	double t = 0.0, b = 1.0, g = 0.0, gammar, gammag, gammab;
 	int n, c;
 	Window root = RootWindow(dpy, screen);
 	XRRScreenResources *res = XRRGetScreenResourcesCurrent(dpy, root);
 
-	if (temp.temp < TEMPERATURE_ZERO) {
+	if (ts->temp < TEMPERATURE_ZERO) {
 		fprintf(stderr, "%s: can't set temperature less than: %d\n",
 		        argv0, TEMPERATURE_ZERO);
 		t = (double)TEMPERATURE_ZERO;
 	} else {
-		t = (double)temp.temp;
+		t = (double)ts->temp;
 	}
 
-	b = DoubleTrim(temp.brightness, 0.0, 1.0);
-	if (temp.temp < TEMPERATURE_NORM) {
+	b = DoubleTrim(ts->brightness, 0.0, 1.0);
+	if (ts->temp < TEMPERATURE_NORM) {
 		gammar = 1.0;
-		if (temp.temp > TEMPERATURE_ZERO) {
+		if (ts->temp > TEMPERATURE_ZERO) {
 			g = log(t - TEMPERATURE_ZERO);
 			gammag =
 			    DoubleTrim(GAMMA_K0GR + GAMMA_K1GR * g, 0.0, 1.0);
@@ -270,7 +265,7 @@ main(int argc, char **argv)
 		// No arguments, so print estimated temperature for each
 		// screen
 		for (screen = screen_first; screen <= screen_last; screen++) {
-			temp = get_sct_for_screen(screen, crtc_specified);
+			get_sct_for_screen(&temp, screen, crtc_specified);
 			printf("Screen %d: temperature ~ %d %f\n", screen,
 			       temp.temp, temp.brightness);
 		}
@@ -282,16 +277,17 @@ main(int argc, char **argv)
 				temp.temp = TEMPERATURE_NORM;
 			for (screen = screen_first; screen <= screen_last;
 			     screen++)
-				sct_for_screen(screen, crtc_specified, temp);
+				sct_for_screen(screen, crtc_specified, &temp);
 		} else {
 			// Delta mode: Shift temperature of each screen
 			// by given value
-			for (screen = screen_first; screen <= screen_last;
-			     screen++) {
-				struct temp_status tempd = get_sct_for_screen(
-				    screen, crtc_specified);
+			for (screen = screen_first; screen <= screen_last; screen++) {
+				struct temp_status tempd;
+				tempd.temp = 0;
+				tempd.brightness = 1.0;
+				get_sct_for_screen(&tempd, screen, crtc_specified);
 				tempd.temp += temp.temp;
-				sct_for_screen(screen, crtc_specified, tempd);
+				sct_for_screen(screen, crtc_specified, &tempd);
 			}
 		}
 	}
