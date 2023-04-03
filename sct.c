@@ -56,7 +56,7 @@ die(const char *errstr, ...)
 static void
 usage(void)
 {
-	die("usage: %s [-vd] [-c CRTC] [-s screen] [temperature] "
+	die("usage: %s [-v] [-d dT] [-c CRTC] [-s screen] [temperature] "
 	    "[brightness]\n", argv0);
 }
 
@@ -202,13 +202,15 @@ main(int argc, char **argv)
 	int screen_specified = -1, screen_first = 0, screen_last = -1;
 	int crtc_specified = -1;
 	struct temp_status temp = { .temp = DELTA_MIN, .brightness = -1.0 };
-	int dflag = 0;
+	int delta = 0;
 
 	argv0 = argv[0];
 
 	ARGBEGIN {
 	case 'd':
-		dflag = 1;
+		delta = atoi(EARGF(usage()));
+		if (delta == 0)
+			usage();
 		break;
 	case 'v':
 		vflag = 1;
@@ -251,7 +253,7 @@ main(int argc, char **argv)
 		screen_first = screen_specified;
 		screen_last = screen_specified;
 	}
-	if ((temp.temp < 0) && !dflag) {
+	if (temp.temp < 0 && delta == 0) {
 		// No arguments, so print estimated temperature for each
 		// screen
 		for (screen = screen_first; screen <= screen_last; screen++) {
@@ -260,15 +262,14 @@ main(int argc, char **argv)
 			       temp.temp, temp.brightness);
 		}
 	} else {
-		struct temp_status tempd = {.temp = 0, .brightness = 1.0};
-		if (!dflag && temp.temp == 0)
+		if (delta == 0 && temp.temp == 0)
 			temp.temp = TEMPERATURE_NORM;
 		for (screen = screen_first; screen <= screen_last; screen++) {
-			if (dflag) {
-				get_sct_for_screen(&tempd, screen, crtc_specified);
-				tempd.temp += temp.temp;
+			if (delta) {
+				get_sct_for_screen(&temp, screen, crtc_specified);
+				temp.temp += delta;
 			}
-			sct_for_screen(screen, crtc_specified, dflag? &tempd : &temp);
+			sct_for_screen(screen, crtc_specified, &temp);
 		}
 	}
 
