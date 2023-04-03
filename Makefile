@@ -21,9 +21,9 @@ install: all
 	mkdir -p "$(DESTDIR)$(PREFIX)/bin"
 	cp -f sct "$(DESTDIR)$(PREFIX)/bin"
 	chmod 755 "$(DESTDIR)$(PREFIX)/bin/sct"
-	#installing manual page
+	# installing manual page
 	mkdir -p "$(DESTDIR)$(MANPREFIX)/man1"
-	sed "s:VERSION:$(VERSION)/g" < sct.1 > "$(DESTDIR)$(MANPREFIX)/man1/sct.1"
+	sed "s:VERSION:$(VERSION):g" < sct.1 > "$(DESTDIR)$(MANPREFIX)/man1/sct.1"
 
 uninstall:
 	rm -f "$(DESTDIR)$(PREFIX)/bin/sct"
