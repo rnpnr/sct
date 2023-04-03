@@ -147,7 +147,14 @@ sct_for_screen(int screen, int icrtc, struct temp_status temp)
 	Window root = RootWindow(dpy, screen);
 	XRRScreenResources *res = XRRGetScreenResourcesCurrent(dpy, root);
 
-	t = (double)temp.temp;
+	if (temp.temp < TEMPERATURE_ZERO) {
+		fprintf(stderr, "%s: can't set temperature less than: %d\n",
+		        argv0, TEMPERATURE_ZERO);
+		t = (double)TEMPERATURE_ZERO;
+	} else {
+		t = (double)temp.temp;
+	}
+
 	b = DoubleTrim(temp.brightness, 0.0, 1.0);
 	if (temp.temp < TEMPERATURE_NORM) {
 		gammar = 1.0;
@@ -271,15 +278,8 @@ main(int argc, char **argv)
 		if (!dflag) {
 			// Set temperature to given value or default for
 			// a value of 0
-			if (temp.temp == 0) {
+			if (temp.temp == 0)
 				temp.temp = TEMPERATURE_NORM;
-			} else if (temp.temp < TEMPERATURE_ZERO) {
-				fprintf(stderr,
-				        "WARNING! Temperatures below "
-				        "%d cannot be displayed.\n",
-				        TEMPERATURE_ZERO);
-				temp.temp = TEMPERATURE_ZERO;
-			}
 			for (screen = screen_first; screen <= screen_last;
 			     screen++)
 				sct_for_screen(screen, crtc_specified, temp);
@@ -291,14 +291,6 @@ main(int argc, char **argv)
 				struct temp_status tempd = get_sct_for_screen(
 				    screen, crtc_specified);
 				tempd.temp += temp.temp;
-				if (tempd.temp < TEMPERATURE_ZERO) {
-					fprintf(stderr,
-					        "WARNING! Temperatures "
-					        "below %d cannot be "
-					        "displayed.\n",
-					        TEMPERATURE_ZERO);
-					tempd.temp = TEMPERATURE_ZERO;
-				}
 				sct_for_screen(screen, crtc_specified, tempd);
 			}
 		}
