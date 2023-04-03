@@ -1,28 +1,35 @@
-CC ?= gcc
-CFLAGS ?= -Wall -Wextra -Werror -pedantic -std=c99 -O2 -I /usr/X11R6/include
-LDFLAGS ?= -L /usr/X11R6/lib -s
-PREFIX ?= /usr
-BIN ?= $(PREFIX)/bin
-MAN ?= $(PREFIX)/share/man/man1
-INSTALL ?= install
+.POSIX:
 
-PROG = ssct
-SRCS = ssct.c
+VERSION = 1.9
+PREFIX = /usr/local
+MANPREFIX = ${PREFIX}/share/man
 
-LIBS = -lX11 -lXrandr -lm
+CFLAGS = -Wall -Wextra -pedantic -std=c99 -O2 -I/usr/X11R6/include
+CPPFLAGS = -DVERSION=\"${VERSION}\"
+LDFLAGS = -lX11 -lXrandr -lm -L/usr/X11R6/lib -s
 
-$(PROG): $(SRCS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
+all: ssct
 
-install: $(PROG) $(PROG).1
-	$(INSTALL) -d $(DESTDIR)$(BIN)
-	$(INSTALL) -m 0755 $(PROG) $(DESTDIR)$(BIN)
-	$(INSTALL) -d $(DESTDIR)$(MAN)
-	$(INSTALL) -m 0644 $(PROG).1 $(DESTDIR)$(MAN)
+.c.o:
+	$(CC) -o $@ -c $< $(CFLAGS) $(CPPFLAGS)
+
+.o:
+	$(CC) -o $@ $< $(LDFLAGS)
+
+install: all
+	# installing executable
+	mkdir -p "$(DESTDIR)$(PREFIX)/bin"
+	cp -f ssct "$(DESTDIR)$(PREFIX)/bin"
+	chmod 755 "$(DESTDIR)$(PREFIX)/bin/ssct"
+	#installing manual page
+	mkdir -p "$(DESTDIR)$(MANPREFIX)/man1"
+	sed "s:VERSION:$(VERSION)/g" < ssct.1 > "$(DESTDIR)$(MANPREFIX)/man1/ssct.1"
 
 uninstall:
-	rm -f $(BIN)/$(PROG)
-	rm -f $(MAN)/$(PROG).1
+	rm -f "$(DESTDIR)$(PREFIX)/bin/ssct"
+	rm -f "$(DESTDIR)$(MANPREFIX)/man1/ssct.1"
 
 clean:
-	rm -f $(PROG)
+	rm -f ssct $(OBJ)
+
+.PHONY: all clean install uninstall
