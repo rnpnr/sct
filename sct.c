@@ -270,25 +270,15 @@ main(int argc, char **argv)
 			       temp.temp, temp.brightness);
 		}
 	} else {
-		if (!dflag) {
-			// Set temperature to given value or default for
-			// a value of 0
-			if (temp.temp == 0)
-				temp.temp = TEMPERATURE_NORM;
-			for (screen = screen_first; screen <= screen_last;
-			     screen++)
-				sct_for_screen(screen, crtc_specified, &temp);
-		} else {
-			// Delta mode: Shift temperature of each screen
-			// by given value
-			for (screen = screen_first; screen <= screen_last; screen++) {
-				struct temp_status tempd;
-				tempd.temp = 0;
-				tempd.brightness = 1.0;
+		struct temp_status tempd = {.temp = 0, .brightness = 1.0};
+		if (!dflag && temp.temp == 0)
+			temp.temp = TEMPERATURE_NORM;
+		for (screen = screen_first; screen <= screen_last; screen++) {
+			if (dflag) {
 				get_sct_for_screen(&tempd, screen, crtc_specified);
 				tempd.temp += temp.temp;
-				sct_for_screen(screen, crtc_specified, &tempd);
 			}
+			sct_for_screen(screen, crtc_specified, dflag? &tempd : &temp);
 		}
 	}
 
