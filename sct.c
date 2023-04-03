@@ -145,24 +145,16 @@ sct_for_screen(int screen, int icrtc, struct temp_status *ts)
 	if (ts->temp < TEMPERATURE_ZERO) {
 		fprintf(stderr, "%s: can't set temperature less than: %d\n",
 		        argv0, TEMPERATURE_ZERO);
-		t = (double)TEMPERATURE_ZERO;
-	} else {
-		t = (double)ts->temp;
+		ts->temp = TEMPERATURE_ZERO;
 	}
+	t = (double)ts->temp;
 
 	b = DoubleTrim(ts->brightness, 0.0, 1.0);
 	if (ts->temp < TEMPERATURE_NORM) {
 		gammar = 1.0;
-		if (ts->temp > TEMPERATURE_ZERO) {
-			g = log(t - TEMPERATURE_ZERO);
-			gammag =
-			    DoubleTrim(GAMMA_K0GR + GAMMA_K1GR * g, 0.0, 1.0);
-			gammab =
-			    DoubleTrim(GAMMA_K0BR + GAMMA_K1BR * g, 0.0, 1.0);
-		} else {
-			gammag = 0.0;
-			gammab = 0.0;
-		}
+		g = log(t - TEMPERATURE_ZERO);
+		gammag = DoubleTrim(GAMMA_K0GR + GAMMA_K1GR * g, 0.0, 1.0);
+		gammab = DoubleTrim(GAMMA_K0BR + GAMMA_K1BR * g, 0.0, 1.0);
 	} else {
 		g = log(t - (TEMPERATURE_NORM - TEMPERATURE_ZERO));
 		gammar = DoubleTrim(GAMMA_K0RB + GAMMA_K1RB * g, 0.0, 1.0);
