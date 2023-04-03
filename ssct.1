@@ -1,45 +1,42 @@
-.TH xsct 1 "Dec 2022" "1.9" "User Manual"
+.TH SSCT 1 ssct\-VERSION
 .SH NAME
-xsct \- X11 set screen color temperature
+ssct \- set screen color temperature (X11)
 .SH SYNOPSIS
-.B xsct 
-[options] 
-.I [temperature]
-.I [brightness]
+.B ssct
+.RB [options]
+.RB [temperature]
+.RB [brightness]
 
 .SH DESCRIPTION
-.B xsct
+.B ssct
 sets the screen's color temperature.
 
 .SH OPTIONS
 .TP
-.B -h, --help
-Display usage information and exit
+.B -v
+verbose output.
 .TP
-.B -v, --verbose
-Display debugging information
-.TP
-.B -d, --delta
+.B -d
 Shift temperature by temperature value
 .TP
-.B -s, --screen N
+.B -s N
 Zero-based index of screen to use.
 .TP
-.B -c, --crtc N
+.B -c N
 Zero-based index of CRTC to use.
 .TP
-.I [temperature]
+.BI [temperature]
 Black body temperature
 .br
 If the value is 0, xsct sets the color temperature to the default of 6500
 .br
 If no arguments are passed, xsct estimates the current display temperature and brightness
 .TP
-.I [brightness]
+.BI [brightness]
 Linear brightness between 0.0 (inclusive) and 1.0 (inclusive). The default value is 1.0 if no parameter is passed.
 
 .SH AUTHOR
-xsct is based on sct by Ted Unangst <tedu@openbsd.org>
+ssct is based on sct by Ted Unangst <tedu@openbsd.org>
 
 .SH SEE ALSO
 redshift(1), xtemp(1)
