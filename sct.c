@@ -83,17 +83,11 @@ get_sct_for_screen(struct temp_status *ts, int screen, int icrtc)
 	else
 		icrtc = 0;
 	for (c = icrtc; c < (icrtc + n); c++) {
-		RRCrtc crtcxid;
-		int size;
-		XRRCrtcGamma *crtc_gamma;
-		crtcxid = res->crtcs[c];
-		crtc_gamma = XRRGetCrtcGamma(dpy, crtcxid);
-		size = crtc_gamma->size;
-		gammar += crtc_gamma->red[size - 1];
-		gammag += crtc_gamma->green[size - 1];
-		gammab += crtc_gamma->blue[size - 1];
-
-		XRRFreeGamma(crtc_gamma);
+		XRRCrtcGamma *cg = XRRGetCrtcGamma(dpy, res->crtcs[c]);
+		gammar += cg->red[cg->size - 1];
+		gammag += cg->green[cg->size - 1];
+		gammab += cg->blue[cg->size - 1];
+		XRRFreeGamma(cg);
 	}
 	XFree(res);
 	ts->brightness = (gammar > gammag) ? gammar : gammag;
@@ -170,26 +164,16 @@ sct_for_screen(int screen, int icrtc, struct temp_status *ts)
 	else
 		icrtc = 0;
 	for (c = icrtc; c < (icrtc + n); c++) {
-		int size, i;
-		RRCrtc crtcxid;
-		XRRCrtcGamma *crtc_gamma;
-		crtcxid = res->crtcs[c];
-		size = XRRGetCrtcGammaSize(dpy, crtcxid);
-
-		crtc_gamma = XRRAllocGamma(size);
-
+		int i, size = XRRGetCrtcGammaSize(dpy, res->crtcs[c]);
+		XRRCrtcGamma *cg = XRRAllocGamma(size);
 		for (i = 0; i < size; i++) {
 			g = GAMMA_MULT * b * (double)i / (double)size;
-			crtc_gamma->red[i] =
-			    (unsigned short int)(g * gammar + 0.5);
-			crtc_gamma->green[i] =
-			    (unsigned short int)(g * gammag + 0.5);
-			crtc_gamma->blue[i] =
-			    (unsigned short int)(g * gammab + 0.5);
+			cg->red[i] = (unsigned short int)(g * gammar + 0.5);
+			cg->green[i] = (unsigned short int)(g * gammag + 0.5);
+			cg->blue[i] = (unsigned short int)(g * gammab + 0.5);
 		}
-
-		XRRSetCrtcGamma(dpy, crtcxid, crtc_gamma);
-		XRRFreeGamma(crtc_gamma);
+		XRRSetCrtcGamma(dpy, res->crtcs[c], cg);
+		XRRFreeGamma(cg);
 	}
 
 	XFree(res);
