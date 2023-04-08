@@ -74,7 +74,7 @@ get_sct_for_screen(struct temp_status *ts, int screen, int icrtc)
 	XRRScreenResources *res = XRRGetScreenResourcesCurrent(dpy, root);
 
 	int n, c;
-	double t = 0.0;
+	double t = TEMPERATURE_ZERO;
 	double gammar = 0.0, gammag = 0.0, gammab = 0.0, gammad = 0.0;
 
 	n = res->ncrtc;
@@ -98,33 +98,27 @@ get_sct_for_screen(struct temp_status *ts, int screen, int icrtc)
 		gammab /= ts->brightness;
 		ts->brightness /= n;
 		ts->brightness /= BRIGHTHESS_DIV;
-		ts->brightness = DoubleTrim(ts->brightness, 0.0, 1.0);
 		if (vflag)
 			fprintf(stderr,
 			        "DEBUG: Gamma: %f, %f, %f, brightness: %f\n",
 			        gammar, gammag, gammab, ts->brightness);
 		gammad = gammab - gammar;
 		if (gammad < 0.0) {
-			if (gammab > 0.0) {
-				t = exp((gammag + 1.0 + gammad
-				         - (GAMMA_K0GR + GAMMA_K0BR))
-				        / (GAMMA_K1GR + GAMMA_K1BR))
-				    + TEMPERATURE_ZERO;
-			} else {
-				t = (gammag > 0.0) ? (
-					exp((gammag - GAMMA_K0GR) / GAMMA_K1GR)
-					+ TEMPERATURE_ZERO)
-				                   : TEMPERATURE_ZERO;
-			}
+			if (gammab > 0.0)
+				t += exp((gammag + 1.0 + gammad
+				          - (GAMMA_K0GR + GAMMA_K0BR))
+				         / (GAMMA_K1GR + GAMMA_K1BR));
+			else if (gammag > 0.0)
+				t += exp((gammag - GAMMA_K0GR) / GAMMA_K1GR);
 		} else {
 			t = exp((gammag + 1.0 - gammad
 			         - (GAMMA_K0GB + GAMMA_K0RB))
 			        / (GAMMA_K1GB + GAMMA_K1RB))
 			    + (TEMPERATURE_NORM - TEMPERATURE_ZERO);
 		}
-	} else
-		ts->brightness = DoubleTrim(ts->brightness, 0.0, 1.0);
+	}
 
+	ts->brightness = DoubleTrim(ts->brightness, 0.0, 1.0);
 	ts->temp = (int)(t + 0.5);
 }
 
