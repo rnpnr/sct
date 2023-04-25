@@ -204,6 +204,9 @@ main(int argc, char **argv)
 		break;
 	} ARGEND;
 
+	if (delta != 0 && argc)
+		usage();
+
 	switch (argc) {
 	case 2:
 		ts.brightness = atof(argv[1]);
